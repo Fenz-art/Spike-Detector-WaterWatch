@@ -1,0 +1,135 @@
+/* Contact Page Specific Styles */
+
+.contact-hero {
+    padding: 120px 0 80px;
+    background: linear-gradient(135deg, var(--medical-blue) 0%, var(--vibrant-teal) 100%);
+    color: white;
+    text-align: center;
+}
+
+.contact-section {
+    padding: 5rem 0;
+}
+
+.contact-form-container {
+    background: var(--bg-card);
+    padding: 2.5rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+}
+
+.contact-form-container h2 {
+    color: var(--text-primary);
+}
+
+.contact-info-container {
+    position: sticky;
+    top: 100px;
+}
+
+.contact-info-container h3 {
+    color: var(--text-primary);
+}
+
+.contact-info-card {
+    background: var(--bg-card);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.contact-info-card:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--vibrant-teal);
+}
+
+.contact-info-icon {
+    width: 50px;
+    height: 50px;
+    min-width: 50px;
+    background: linear-gradient(135deg, var(--medical-blue) 0%, var(--vibrant-teal) 100%);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.contact-info-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.contact-info-text {
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+    line-height: 1.6;
+}
+
+.contact-social {
+    background: var(--bg-soft-gray);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+}
+
+.social-links {
+    display: flex;
+    gap: 1rem;
+}
+
+.social-link {
+    width: 45px;
+    height: 45px;
+    background: white;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--medical-blue);
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+body.dark-mode .social-link {
+    background: var(--bg-card);
+}
+
+.social-link:hover {
+    background: linear-gradient(135deg, var(--medical-blue) 0%, var(--vibrant-teal) 100%);
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Map Section */
+.map-section {
+    height: 400px;
+    width: 100%;
+    background: var(--bg-soft-gray);
+}
+
+.contact-map {
+    width: 100%;
+    height: 100%;
+}
+
+@media (max-width: 991px) {
+    .contact-info-container {
+        position: static;
+        margin-top: 3rem;
+    }
+    
+    .map-section {
+        height: 300px;
+    }
+}

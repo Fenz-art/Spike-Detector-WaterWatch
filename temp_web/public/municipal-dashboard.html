@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Municipal Dashboard | Waterborne Disease Monitor</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>WBD Monitor</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="fas fa-city"></i>
+                </div>
+                <div class="user-info">
+                    <div class="user-name" id="userName">Loading...</div>
+                    <div class="user-role">Municipal Authority</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" data-view="overview">
+                    <i class="fas fa-home"></i>
+                    <span>Overview</span>
+                </a>
+                <a href="#" class="menu-item" data-view="heatmap">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Heatmap</span>
+                </a>
+                <a href="#" class="menu-item" data-view="trends">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Trend Analysis</span>
+                </a>
+                <a href="#" class="menu-item" data-view="alerts">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                    <span class="badge bg-danger ms-auto" id="alertCount">0</span>
+                </a>
+                <a href="#" class="menu-item" data-view="records">
+                    <i class="fas fa-database"></i>
+                    <span>All Records</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="#" class="menu-item" id="themeToggleSidebar">
+                    <i class="fas fa-moon"></i>
+                    <span>Dark Mode</span>
+                </a>
+                <a href="#" class="menu-item" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Active Alert Banner -->
+            <div class="alert-banner d-none" id="alertBanner">
+                <div class="alert-banner-content">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="alertBannerText">3 active disease spike alerts require attention</span>
+                    <button class="btn btn-sm btn-light ms-auto" onclick="showView('alerts')">View Alerts</button>
+                </div>
+            </div>
+            
+            <!-- Header -->
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="dashboard-title">Municipal Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <button class="header-icon-btn" id="notificationBtn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">5</span>
+                    </button>
+                    <button class="header-icon-btn" id="exportBtn" title="Export Data">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="header-icon-btn" id="helpBtn">
+                        <i class="fas fa-question-circle"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Content Area -->
+            <div class="dashboard-content">
+                <!-- Overview View -->
+                <div class="view-container active" id="overviewView">
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-primary">
+                                    <i class="fas fa-database"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Total Records</div>
+                                    <div class="stat-value" id="totalRecords">0</div>
+                                    <div class="stat-trend text-success">
+                                        <i class="fas fa-arrow-up"></i> 12% this week
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-danger">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Active Alerts</div>
+                                    <div class="stat-value text-danger" id="activeAlerts">0</div>
+                                    <div class="stat-trend text-danger">
+                                        <i class="fas fa-arrow-up"></i> 3 new today
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-warning">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Total Cases</div>
+                                    <div class="stat-value" id="totalCases">0</div>
+                                    <div class="stat-trend text-warning">
+                                        <i class="fas fa-minus"></i> Stable
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-success">
+                                    <i class="fas fa-hospital"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Partner Hospitals</div>
+                                    <div class="stat-value" id="partnerHospitals">0</div>
+                                    <div class="stat-trend text-success">
+                                        <i class="fas fa-check"></i> Active
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-4">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Case Trends (Last 30 Days)</h3>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="overviewChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Recent Alerts</h3>
+                                </div>
+                                <div class="card-body" id="recentAlertsList">
+                                    <div class="text-center text-secondary py-4">
+                                        <i class="fas fa-bell-slash fa-2x mb-2 d-block"></i>
+                                        No recent alerts
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Heatmap View -->
+                <div class="view-container" id="heatmapView">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Geographic Disease Distribution</h3>
+                            <p class="card-subtitle">Interactive heatmap showing concentration of disease cases</p>
+                        </div>
+                        <div class="card-body p-0">
+                            <div id="map" style="height: 600px; width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Trends View -->
+                <div class="view-container" id="trendsView">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3 class="card-title">Trend Analysis Filters</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Location</label>
+                                    <select class="form-select" id="trendLocation">
+                                        <option value="">All Locations</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Disease Type</label>
+                                    <select class="form-select" id="trendDiseaseType">
+                                        <option value="">All Diseases</option>
+                                        <option value="cholera">Cholera</option>
+                                        <option value="typhoid">Typhoid</option>
+                                        <option value="dysentery">Dysentery</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Time Period</label>
+                                    <select class="form-select" id="trendPeriod">
+                                        <option value="7">Last 7 Days</option>
+                                        <option value="30" selected>Last 30 Days</option>
+                                        <option value="90">Last 90 Days</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button class="btn btn-primary w-100" id="applyTrendFilters">
+                                        <i class="fas fa-filter me-2"></i> Apply Filters
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Disease Cases Trend Line Analysis</h3>
+                            <p class="card-subtitle">Historical data with spike detection markers and confidence intervals</p>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="trendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Alerts View -->
+                <div class="view-container" id="alertsView">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3 class="card-title">Alert Filters</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <select class="form-select" id="alertStatus">
+                                        <option value="">All Statuses</option>
+                                        <option value="active">Active</option>
+                                        <option value="acknowledged">Acknowledged</option>
+                                        <option value="resolved">Resolved</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="alertSeverity">
+                                        <option value="">All Severities</option>
+                                        <option value="critical">Critical</option>
+                                        <option value="high">High</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="low">Low</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select" id="alertLocation">
+                                        <option value="">All Locations</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-primary w-100" id="applyAlertFilters">
+                                        <i class="fas fa-filter me-2"></i> Apply Filters
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Disease Spike Alerts</h3>
+                            <p class="card-subtitle">Anomalies detected through AI analysis</p>
+                        </div>
+                        <div class="card-body" id="alertsListContainer">
+                            <div class="text-center text-secondary py-5">
+                                <i class="fas fa-bell-slash fa-3x mb-3 d-block"></i>
+                                No alerts found
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- All Records View -->
+                <div class="view-container" id="recordsView">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">All Medical Records</h3>
+                            <p class="card-subtitle">Comprehensive view of all submitted records</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="recordsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Hospital</th>
+                                            <th>Location</th>
+                                            <th>Disease Type</th>
+                                            <th>Cases</th>
+                                            <th>Date Reported</th>
+                                            <th>Uploaded</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recordsTableBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center text-secondary py-5">
+                                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                                No records found
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <!-- Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="/js/main.js"></script>
+    <script src="/js/municipal-dashboard.js"></script>
+</body>
+</html>
