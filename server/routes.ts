@@ -378,6 +378,76 @@ const casesCount = parsedData
     }
   });
 
+  // Analytics for a specific record
+  app.get("/api/records/analytics/:recordId", requireAuth, async (req, res) => {
+    try {
+      // Fetch the record
+      const record = await storage.findRecordById(req.params.recordId);
+      if (!record) {
+        return res.status(404).json({ message: "Record not found" });
+      }
+
+      // Fetch all records for the same location and diseaseType for trend analysis
+      const relatedRecords = await storage.findRecords({
+        location: record.location,
+        diseaseType: record.diseaseType,
+      });
+
+      // Example: Monthly case distribution (group by month)
+      const monthlyCases: any = {};
+      relatedRecords.forEach(r => {
+        const month = new Date(r.dateReported).toLocaleString('default', { month: 'short' });
+        monthlyCases[month] = (monthlyCases[month] || 0) + r.casesCount;
+      });
+      const demoData = Object.entries(monthlyCases).map(([month, cases]) => ({ month, cases }));
+
+      // Example: Outbreak probability trend (random demo, but could be ML output)
+      const trendData = [
+        { day: "Mon", probability: 0.3 },
+        { day: "Tue", probability: 0.45 },
+        { day: "Wed", probability: 0.62 },
+        { day: "Thu", probability: 0.78 },
+        { day: "Fri", probability: 0.85 },
+        { day: "Sat", probability: 0.72 },
+        { day: "Sun", probability: 0.55 },
+      ];
+
+      // Fetch alerts for this location/diseaseType
+      const alerts = await storage.findAlerts({
+        location: record.location,
+        diseaseType: record.diseaseType,
+        status: "active"
+      });
+      // Format alerts for frontend
+      const formattedAlerts = alerts.map(a => ({
+        severity: a.severity,
+        location: a.location,
+        disease: a.diseaseType,
+        cases: a.casesDetected,
+        probability: Math.min(1, a.casesDetected / (a.expectedCases || 1)),
+      }));
+
+      res.json({
+        demoData: demoData.length ? demoData : [
+          { month: "Jan", cases: 45 },
+          { month: "Feb", cases: 52 },
+          { month: "Mar", cases: 78 },
+          { month: "Apr", cases: 145 },
+          { month: "May", cases: 89 },
+          { month: "Jun", cases: 67 },
+        ],
+        trendData,
+        alerts: formattedAlerts.length ? formattedAlerts : [
+          { severity: "high", location: "East Bay Area", disease: "Cholera", cases: 89, probability: 0.87 },
+          { severity: "medium", location: "Downtown District", disease: "Typhoid", cases: 34, probability: 0.65 },
+          { severity: "low", location: "North Region", disease: "Hepatitis A", cases: 12, probability: 0.42 },
+        ],
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Unable to fetch analytics" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

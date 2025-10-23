@@ -5,8 +5,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload as UploadIcon, File, X, Droplet, ArrowLeft, CheckCircle } from "lucide-react";
+import { Upload as UploadIcon, File, X, Droplet, ArrowLeft, CheckCircle, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
 export default function Upload() {
   const [file, setFile] = useState<File | null>(null);
@@ -22,6 +23,8 @@ export default function Upload() {
     latitude: "",
     longitude: "",
   });
+
+  const [analytics, setAnalytics] = useState<{ demoData: any[]; trendData: any[]; alerts: any[] } | null>(null);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -89,6 +92,30 @@ export default function Upload() {
         toast({
           title: "Upload Successful!",
           description: `File processed successfully. ${result.alert ? 'Alert created!' : ''}`,
+        });
+        setAnalytics({
+          demoData: result.demoData || [
+            { month: "Jan", cases: 45 },
+            { month: "Feb", cases: 52 },
+            { month: "Mar", cases: 78 },
+            { month: "Apr", cases: 145 },
+            { month: "May", cases: 89 },
+            { month: "Jun", cases: 67 },
+          ],
+          trendData: result.trendData || [
+            { day: "Mon", probability: 0.3 },
+            { day: "Tue", probability: 0.45 },
+            { day: "Wed", probability: 0.62 },
+            { day: "Thu", probability: 0.78 },
+            { day: "Fri", probability: 0.85 },
+            { day: "Sat", probability: 0.72 },
+            { day: "Sun", probability: 0.55 },
+          ],
+          alerts: result.alerts || [
+            { severity: "high", location: "East Bay Area", disease: "Cholera", cases: 89, probability: 0.87 },
+            { severity: "medium", location: "Downtown District", disease: "Typhoid", cases: 34, probability: 0.65 },
+            { severity: "low", location: "North Region", disease: "Hepatitis A", cases: 12, probability: 0.42 },
+          ],
         });
         setLocation("/reports");
       } else {
@@ -266,7 +293,85 @@ export default function Upload() {
               {uploading ? "Uploading..." : "Upload and Analyze"}
             </Button>
           </form>
+
+          {analytics && (
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="grid lg:grid-cols-2 gap-8 mb-8 mt-12"
+            >
+              <Card className="p-6 bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-blue-500/20 backdrop-blur-sm">
+                <h2 className="text-2xl font-bold text-white mb-6">Monthly Case Distribution</h2>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={analytics.demoData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <XAxis dataKey="month" stroke="#94a3b8" />
+                    <YAxis stroke="#94a3b8" />
+                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #3b82f6' }} labelStyle={{ color: '#fff' }} />
+                    <Bar dataKey="cases" fill="#3b82f6" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Card>
+              <Card className="p-6 bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-blue-500/20 backdrop-blur-sm">
+                <h2 className="text-2xl font-bold text-white mb-6">Outbreak Probability Trend</h2>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={analytics.trendData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <XAxis dataKey="day" stroke="#94a3b8" />
+                    <YAxis stroke="#94a3b8" />
+                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #06b6d4' }} labelStyle={{ color: '#fff' }} />
+                    <Line type="monotone" dataKey="probability" stroke="#06b6d4" strokeWidth={3} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Card>
+            </motion.div>
+          )}
+          {analytics && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              <Card className="p-8 bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-blue-500/20 backdrop-blur-sm mt-8">
+                <h2 className="text-2xl font-bold text-white mb-6">Recent Alerts</h2>
+                <div className="space-y-4">
+                  {analytics.alerts.map((alert, idx) => (
+                    <AlertItem key={idx} {...alert} />
+                  ))}
+                </div>
+              </Card>
+            </motion.div>
+          )}
         </motion.div>
+      </div>
+    </div>
+  );
+}
+
+function AlertItem({ severity, location, disease, cases, probability }: { severity: string; location: string; disease: string; cases: number; probability: number }) {
+  const severityColors = {
+    high: "bg-red-500/20 border-red-500 text-red-400",
+    medium: "bg-yellow-500/20 border-yellow-500 text-yellow-400",
+    low: "bg-blue-500/20 border-blue-500 text-blue-400",
+  };
+  return (
+    <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded-lg border border-blue-500/10">
+      <div className="flex items-center gap-4">
+        <div className={`px-3 py-1 rounded-full text-xs font-semibold border ${severityColors[severity as keyof typeof severityColors]}`}>
+          {severity.toUpperCase()}
+        </div>
+        <div>
+          <div className="flex items-center gap-2 text-white font-medium">
+            <MapPin className="w-4 h-4" />
+            <span>{location}</span>
+          </div>
+          <p className="text-sm text-gray-400">{disease}</p>
+        </div>
+      </div>
+      <div className="text-right">
+        <p className="text-white font-bold">{cases} cases</p>
+        <p className="text-sm text-gray-400">{(probability * 100).toFixed(0)}% probability</p>
       </div>
     </div>
   );
