@@ -89,9 +89,24 @@ export default function Upload() {
 
       if (response.ok) {
         const result = await response.json();
+        // ML spike detection logic
+        let alerts: { severity: string; location: string; disease: string; cases: number; probability: number }[] = [];
+        if (result.is_spike_detected && result.predictions) {
+          Object.entries(result.predictions).forEach(([disease, isSpike]) => {
+            if (isSpike) {
+              alerts.push({
+                severity: "high", // You can adjust severity logic as needed
+                location: formData.location || "Unknown",
+                disease,
+                cases: result.max_outbreak_probability ? Math.round(result.max_outbreak_probability * 100) : 0,
+                probability: result.max_outbreak_probability || 1,
+              });
+            }
+          });
+        }
         toast({
           title: "Upload Successful!",
-          description: `File processed successfully. ${result.alert ? 'Alert created!' : ''}`,
+          description: `File processed successfully. ${alerts.length > 0 ? alerts.map(a => `Spike detected for ${a.disease}`).join(", ") : ''}`,
         });
         setAnalytics({
           demoData: result.demoData || [
@@ -111,11 +126,11 @@ export default function Upload() {
             { day: "Sat", probability: 0.72 },
             { day: "Sun", probability: 0.55 },
           ],
-          alerts: result.alerts || [
+          alerts: alerts.length > 0 ? alerts : (result.alerts || [
             { severity: "high", location: "East Bay Area", disease: "Cholera", cases: 89, probability: 0.87 },
             { severity: "medium", location: "Downtown District", disease: "Typhoid", cases: 34, probability: 0.65 },
             { severity: "low", location: "North Region", disease: "Hepatitis A", cases: 12, probability: 0.42 },
-          ],
+          ]),
         });
         setLocation("/reports");
       } else {
