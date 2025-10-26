@@ -10,7 +10,6 @@ interface Record {
   _id: string;
   fileName: string;
   location: string;
-  diseaseType: string;
   casesCount: number;
   uploadedAt: string;
   latitude?: number;
@@ -69,9 +68,9 @@ export default function Reports() {
             { day: "Sun", probability: 0.55 },
           ],
           alerts: result.alerts || [
-            { severity: "high", location: "East Bay Area", disease: "Cholera", cases: 89, probability: 0.87 },
-            { severity: "medium", location: "Downtown District", disease: "Typhoid", cases: 34, probability: 0.65 },
-            { severity: "low", location: "North Region", disease: "Hepatitis A", cases: 12, probability: 0.42 },
+            { severity: "high", location: "East Bay Area", cases: 89, probability: 0.87 },
+            { severity: "medium", location: "Downtown District", cases: 34, probability: 0.65 },
+            { severity: "low", location: "North Region", cases: 12, probability: 0.42 },
           ],
         });
       } else {
@@ -140,10 +139,6 @@ export default function Reports() {
                           <span>{record.location}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <AlertTriangle className="w-3 h-3" />
-                          <span>{record.diseaseType}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
                           <Calendar className="w-3 h-3" />
                           <span>{new Date(record.uploadedAt).toLocaleDateString()}</span>
                         </div>
@@ -172,7 +167,6 @@ export default function Reports() {
                         <div className="grid md:grid-cols-2 gap-6">
                           <InfoCard title="File Name" value={selectedRecord.fileName} />
                           <InfoCard title="Location" value={selectedRecord.location} />
-                          <InfoCard title="Disease Type" value={selectedRecord.diseaseType} />
                           <InfoCard title="Total Cases" value={selectedRecord.casesCount.toString()} />
                           <InfoCard 
                             title="Upload Date" 
@@ -189,8 +183,7 @@ export default function Reports() {
                         <div className="p-6 bg-blue-950/20 rounded-lg border border-blue-500/20">
                           <h3 className="text-lg font-semibold text-white mb-3">Analysis Summary</h3>
                           <p className="text-gray-300 leading-relaxed">
-                            This report contains data for {selectedRecord.casesCount} cases of {selectedRecord.diseaseType} 
-                            {' '}in {selectedRecord.location}. The data was uploaded on{' '}
+                            This report contains data for {selectedRecord.casesCount} cases in {selectedRecord.location}. The data was uploaded on{' '}
                             {new Date(selectedRecord.uploadedAt).toLocaleDateString()} and has been processed 
                             through our ML-powered spike detection system.
                           </p>
@@ -284,7 +277,7 @@ function InfoCard({ title, value }: { title: string; value: string }) {
   );
 }
 
-function AlertItem({ severity, location, disease, cases, probability }: { severity: string; location: string; disease: string; cases: number; probability: number }) {
+function AlertItem({ severity, location, cases, probability }: { severity: string; location: string; cases: number; probability: number }) {
   const severityColors = {
     high: "bg-red-500/20 border-red-500 text-red-400",
     medium: "bg-yellow-500/20 border-yellow-500 text-yellow-400",
@@ -301,7 +294,6 @@ function AlertItem({ severity, location, disease, cases, probability }: { severi
             <MapPin className="w-4 h-4" />
             <span>{location}</span>
           </div>
-          <p className="text-sm text-gray-400">{disease}</p>
         </div>
       </div>
       <div className="text-right">

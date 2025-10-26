@@ -160,13 +160,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "No file uploaded" });
         }
 
-        const { location, diseaseType, dateReported, latitude, longitude } = req.body;
+        const { location, dateReported, latitude, longitude } = req.body;
 
-        if (!location || !diseaseType || !dateReported) {
-          // Clean up uploaded file
+        if (!location || !dateReported) {
           fs.unlinkSync(req.file.path);
           return res.status(400).json({
-            message: "Location, disease type, and date are required",
+            message: "Location and date are required",
           });
         }
 
@@ -184,25 +183,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           parsedData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
         }
 
-        // Clean up uploaded file
         fs.unlinkSync(req.file.path);
 
-        // Count cases for selected diseaseType only
-      // ...existing code...
-
-// When processing the uploaded file and calculating casesCount:
-const casesCount = parsedData
-  .filter(row => row.Disease === diseaseType)
-  .reduce((sum, row) => sum + Number(row.Cases), 0);
-
-// ...existing code...
+        // Count total cases (not filtered by diseaseType)
+        const casesCount = parsedData.reduce((sum, row) => sum + Number(row.Cases), 0);
 
         // Create medical record
         const record = await storage.createRecord({
           uploadedBy: req.session.userId!,
           fileName: req.file.originalname,
           location,
-          diseaseType,
           dateReported: new Date(dateReported),
           casesCount,
           latitude: latitude ? parseFloat(latitude) : undefined,
@@ -212,7 +202,7 @@ const casesCount = parsedData
         // Check for spike and create alert if necessary
         const alert = await createAlertIfSpike(
           location,
-          diseaseType,
+          "", // diseaseType removed, pass empty string
           casesCount,
           record._id!,
           latitude ? parseFloat(latitude) : undefined,
@@ -225,7 +215,6 @@ const casesCount = parsedData
             id: record._id,
             fileName: record.fileName,
             location: record.location,
-            diseaseType: record.diseaseType,
             casesCount: record.casesCount,
             uploadedAt: record.uploadedAt,
           },
@@ -238,7 +227,6 @@ const casesCount = parsedData
             : null,
         });
       } catch (error: any) {
-        // Clean up file if it exists
         if (req.file && fs.existsSync(req.file.path)) {
           fs.unlinkSync(req.file.path);
         }
@@ -249,20 +237,13 @@ const casesCount = parsedData
 
   app.get("/api/records", requireAuth, async (req, res) => {
     try {
-      const { location, diseaseType } = req.query;
-      
+      const { location } = req.query;
       const query: any = {};
-      
       if (location) query.location = location;
-      if (diseaseType) query.diseaseType = diseaseType;
-
-      // If hospital user, only show their own records
       if (req.session.role === "hospital") {
         query.uploadedBy = req.session.userId;
       }
-
       const records = await storage.findRecords(query);
-
       res.json({ records });
     } catch (error: any) {
       res.status(500).json({ message: error.message });
@@ -333,11 +314,10 @@ const casesCount = parsedData
   // Analytics Routes
   app.get("/api/analytics/trends", requireAuth, async (req, res) => {
     try {
-      const { location, diseaseType, days = 30 } = req.query;
+      const { location, days = 30 } = req.query;
 
       const filters: any = {};
       if (location) filters.location = location;
-      if (diseaseType) filters.diseaseType = diseaseType;
 
       const trends = await storage.getTrendsData(parseInt(days as string), filters);
 
@@ -381,16 +361,14 @@ const casesCount = parsedData
   // Analytics for a specific record
   app.get("/api/records/analytics/:recordId", requireAuth, async (req, res) => {
     try {
-      // Fetch the record
       const record = await storage.findRecordById(req.params.recordId);
       if (!record) {
         return res.status(404).json({ message: "Record not found" });
       }
 
-      // Fetch all records for the same location and diseaseType for trend analysis
+      // Fetch all records for the same location for trend analysis
       const relatedRecords = await storage.findRecords({
         location: record.location,
-        diseaseType: record.diseaseType,
       });
 
       // Example: Monthly case distribution (group by month)
@@ -412,17 +390,15 @@ const casesCount = parsedData
         { day: "Sun", probability: 0.55 },
       ];
 
-      // Fetch alerts for this location/diseaseType
+      // Fetch alerts for this location
       const alerts = await storage.findAlerts({
         location: record.location,
-        diseaseType: record.diseaseType,
         status: "active"
       });
       // Format alerts for frontend
       const formattedAlerts = alerts.map(a => ({
         severity: a.severity,
         location: a.location,
-        disease: a.diseaseType,
         cases: a.casesDetected,
         probability: Math.min(1, a.casesDetected / (a.expectedCases || 1)),
       }));
@@ -438,9 +414,9 @@ const casesCount = parsedData
         ],
         trendData,
         alerts: formattedAlerts.length ? formattedAlerts : [
-          { severity: "high", location: "East Bay Area", disease: "Cholera", cases: 89, probability: 0.87 },
-          { severity: "medium", location: "Downtown District", disease: "Typhoid", cases: 34, probability: 0.65 },
-          { severity: "low", location: "North Region", disease: "Hepatitis A", cases: 12, probability: 0.42 },
+          { severity: "high", location: "East Bay Area", cases: 89, probability: 0.87 },
+          { severity: "medium", location: "Downtown District", cases: 34, probability: 0.65 },
+          { severity: "low", location: "North Region", cases: 12, probability: 0.42 },
         ],
       });
     } catch (error) {
