@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { log } from "./vite";
 
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URL;
+const MONGODB_URI = 'mongodb+srv://ghazanfarahmed2006_db_user:BigHagrid04@waterspike.rvvehb7.mongodb.net/?retryWrites=true&w=majority&appName=WaterSpike'
 
 export async function connectDatabase(): Promise<boolean> {
   if (!MONGODB_URI) {
