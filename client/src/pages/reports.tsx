@@ -10,6 +10,7 @@ interface Record {
   _id: string;
   fileName: string;
   location: string;
+  diseaseType: string;
   casesCount: number;
   uploadedAt: string;
   latitude?: number;
@@ -136,7 +137,7 @@ export default function Reports() {
                       <div className="space-y-1 text-xs text-gray-400">
                         <div className="flex items-center gap-2">
                           <MapPin className="w-3 h-3" />
-                          <span>{record.location}</span>
+                          <span>{record.diseaseType} - {record.location}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Calendar className="w-3 h-3" />

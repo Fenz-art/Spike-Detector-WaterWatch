@@ -18,6 +18,7 @@ export default function Upload() {
 
   const [formData, setFormData] = useState({
     location: "",
+    diseaseType: "",
     dateReported: "",
     latitude: "",
     longitude: "",
@@ -75,6 +76,7 @@ export default function Upload() {
     const data = new FormData();
     data.append("file", file);
     data.append("location", formData.location);
+    data.append("diseaseType", formData.diseaseType);
     data.append("dateReported", formData.dateReported);
     data.append("latitude", formData.latitude);
     data.append("longitude", formData.longitude);
@@ -279,6 +281,18 @@ export default function Upload() {
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     className="mt-2 bg-slate-900/50 border-blue-500/20 text-white"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="diseaseType">Disease Type</Label>
+                  <Input
+                    id="diseaseType"
+                    name="diseaseType"
+                    type="text"
+                    value={formData.diseaseType}
+                    onChange={e => setFormData({ ...formData, diseaseType: e.target.value })}
+                    className="mb-4"
                     required
                   />
                 </div>

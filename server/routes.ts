@@ -160,12 +160,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "No file uploaded" });
         }
 
-        const { location, dateReported, latitude, longitude } = req.body;
+        const { location, diseaseType, dateReported, latitude, longitude } = req.body;
 
-        if (!location || !dateReported) {
+        if (!location || !diseaseType || !dateReported) {
           fs.unlinkSync(req.file.path);
           return res.status(400).json({
-            message: "Location and date are required",
+            message: "Location, disease type, and date are required",
           });
         }
 
@@ -193,6 +193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           uploadedBy: req.session.userId!,
           fileName: req.file.originalname,
           location,
+          diseaseType,
           dateReported: new Date(dateReported),
           casesCount,
           latitude: latitude ? parseFloat(latitude) : undefined,
@@ -202,7 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Check for spike and create alert if necessary
         const alert = await createAlertIfSpike(
           location,
-          "", // diseaseType removed, pass empty string
+          diseaseType,
           casesCount,
           record._id!,
           latitude ? parseFloat(latitude) : undefined,
